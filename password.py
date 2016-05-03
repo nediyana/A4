@@ -6,7 +6,7 @@ from mailbot import MailBot, register, Callback
 imap_server = 'imap.gmail.com'
 imap_user = 'nediyana_daskalova@brown.edu'
 # imap_password = getpass.getpass()
-imap_password = 'oynjexpnxurqvtnp'
+imap_password = ''
 
 
 #mailbot = MailBot(imap_server, imap_user, imap_password)

@@ -2,6 +2,7 @@ import imaplib, email, getpass
 import time
 import email.message
 import email
+import imaplib_connect
 import pytz
 import dateutil
 import smtplib
@@ -18,7 +19,7 @@ import math
 # Email settings
 imap_server = 'imap.gmail.com'
 imap_user = 'nediyana_daskalova@brown.edu'
-imap_password = 'oynjexpnxurqvtnp'
+imap_password = ''
 
 mailbot = MailBot(imap_server, imap_user, imap_password,port=993, ssl=True)
 
@@ -208,14 +209,14 @@ def make_prediction(incoming_email, test_features):
 
 		# print intercept and coefficients
 		# print lm.intercept_
-		# print lm.coef_
+		print lm.coef_
 
 		# pair the feature names with the coefficients
-		# print 'pair features with coeffs', zip(feature_cols, lm.coef_)
+		print 'pair features with coeffs', zip(feature_cols, lm.coef_)
 
 		# predict for a new observation
 		predicted_reply_time =  lm.predict([test_features[0], test_features[1], test_features[2]])
-		#print 'PREDICTED', predicted_reply_time
+	
 		# calculate the R-squared
 		# print 'SCORE', lm.score(X, y)
 
@@ -263,6 +264,10 @@ class MyCallback(Callback):
 	else:
 		receiver = self.message['To'].strip()
 
+	receiver = 'nediyana_daskalova@brown.edu'
+	subject = self.message['Subject']
+	# print "In reference to " + subject
+
 	if self.message['Cc']:
 		cc_ed = self.message['Cc'].strip().split(',')
 
@@ -304,17 +309,17 @@ class MyCallback(Callback):
 		list_feature = 0
 	features.append(list_feature)
 
-	response = "Hi!\nThank you for the email. This is an auto-generated message for a class assignment. Based on Nediyana's recent email reply rate and the email history between the two of you, she will respond to you in about RESPONSE_TIME. She has replied to PERCENTAGE% of your emails, and on average it has taken her AVERAGE_REPLY_TIME to reply to you.\nBest, Nediyana\'s Auto Responder."
+	response = "Hi!\nThank you for the email. This is an auto-generated message for a class assignment  in reference to your email with subject '" + subject + "'. Based on Nediyana's recent email reply rate and the email history between the two of you, she will respond to you in about RESPONSE_TIME. She has replied to PERCENTAGE% of your emails, and on average it has taken her AVERAGE_REPLY_TIME to reply to you.\nBest, Nediyana\'s Auto Responder."
 
 	predicted_time = make_prediction(incoming_email, features)
 
 	# if this is a new emailer, he/she gets a special response
 	if predicted_time[3] == 1:
-		response= "Hi!\nThank you for the email. This is an auto-generated message for a class assignment. Based on Nediyana's recent email reply rate, she will respond to you in about RESPONSE_TIME. She has replied to PERCENTAGE% of her incoming emails in the last week, and on average it has taken her AVERAGE_REPLY_TIME to reply to them.\nBest, Nediyana\'s Auto Responder."
+		response= "Hi!\nThank you for the email. This is an auto-generated message for a class assignment in reference to your email with subject ' " + subject + "'. Based on Nediyana's recent email reply rate, she will respond to you in about RESPONSE_TIME. She has replied to PERCENTAGE% of her incoming emails in the last week, and on average it has taken her AVERAGE_REPLY_TIME to reply to them.\nBest, Nediyana\'s Auto Responder."
 
 	# if predicted is 'never', that means that I have never replied to this person and I never will
 	if predicted_time == 'never':
-		response = "Hi!\nThank you for the email. This is an auto-generated message for a class assignment. Based on Nediyana's recent email reply rate and the email history between the two of you, she will never respond to you. \nBest, Nediyana\'s Auto Responder."
+		response = "Hi!\nThank you for the email. This is an auto-generated message for a class assignment in reference to your email with subject '" + subject + "'. Based on Nediyana's recent email reply rate and the email history between the two of you, she will never respond to you. \nBest, Nediyana\'s Auto Responder."
 	else:
 		
 		predicted_hours = int(predicted_time[0].split('.')[0])
@@ -338,10 +343,13 @@ class MyCallback(Callback):
 	try:
 		# add a draft to my gmail
 		# http://bioportal.weizmann.ac.il/course/python/PyMOTW/PyMOTW/docs/imaplib/index.html#
-	    	c.append("[Gmail]/Drafts", '', imaplib.Time2Internaldate(time.time()), str(email.message_from_string(response)))
+		if predicted_time == 'never':
+	    		c.append("[Gmail]/Drafts", '', imaplib.Time2Internaldate(time.time()), str(email.message_from_string(response)))
 
 		# send an auto response!
-		if ('jeff' in incoming_email) or 'nediyana' in incoming_email:		
+		else:
+		#if ('jeff' in incoming_email) or 
+		#if 'nediyana' in incoming_email:		
 			msg = response
 			# Send the message via our own SMTP server
 			# calculate average reply time for this sender
@@ -364,6 +372,4 @@ register(MyCallback)
 # check the unprocessed messages and trigger the callback
 mailbot.process_messages()
 print 'processing'
-
-
 
