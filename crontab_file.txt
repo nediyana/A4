@@ -1,0 +1,2 @@
+00 7 * * * python password.py
+*/1 * * * * python mailbot_test.py >> log.txt
